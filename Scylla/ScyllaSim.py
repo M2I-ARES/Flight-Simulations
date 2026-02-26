@@ -7,7 +7,7 @@ Created on Tue Oct  8 19:20:22 2024
 
 """
 This Code is Property of ARES M2I and may only be used for ARES purposes unless
-prior aproval has been given by someone idk
+prior aproval has been given by Matt Nelson
 This Python Code Uses the RocketPy library which is needed inorder for the code to
 be succefly ran, all information about rocketpy can be found here
 https://docs.rocketpy.org/en/latest/index.html
@@ -56,7 +56,7 @@ elif difHOURS<30 and difHOURS>0:
 #https://docs.rocketpy.org/en/latest/reference/classes/motors/SolidMotor.html#rocketpy.SolidMotor
 #Information on Rocket Motors Located in Docuemnt
 AT_I284W= SolidMotor(
-    thrust_source="AeroTech_I284W.eng", #File MUST be in same Folder
+    thrust_source="../Data/AeroTech_I284W.eng", #File MUST be in same Folder
     dry_mass=0.3, #kg
     dry_inertia=(0.125, 0.125, 0.002),
     center_of_dry_mass_position=0.1,
@@ -76,39 +76,39 @@ AT_I284W= SolidMotor(
     nozzle_position=0,
     coordinate_system_orientation="nozzle_to_combustion_chamber",
 )
-AT_I284W.all_info()
+#Display Motor Info
+#AT_I284W.all_info()
 
 #Defining the Rocket
 #NOTE: x=0 is the CG without the motor
 Scylla = Rocket(
-    radius=127 / 2000,
-    mass=14.426,
+    radius=0.035, #m
+    mass=1.82, #kg
     inertia=(6.321, 6.321, 0.034),
     #Both of these cvs files can be obtained for RASAERO 2 or CFD
     #FILES MUST BE IN THE SAME FOLDER AS THE CODE
-    power_off_drag="../data/rockets/calisto/powerOffDragCurve.csv",
-    power_on_drag="../data/rockets/calisto/powerOnDragCurve.csv",
+    power_off_drag="../Data/Scylla_LEP_CD.csv",
+    power_on_drag="../Data/Scylla_LEP_CD.csv",
     center_of_mass_without_motor=0,
     coordinate_system_orientation="tail_to_nose",
 )
 #Adding the Motor
 Scylla.add_motor(AT_I284W, position=-1.255)
 #Adding the Nose Cone
-nose_cone = Scylla.add_nose(length=0.55829, kind="von karman", position=1.278)
+nose_cone = Scylla.add_nose(length=0.2, kind="von karman", position=1.278)
 
 #Adding the Fins (Trapezodial)
 fin_set = Scylla.add_trapezoidal_fins(
-    n=4,
-    root_chord=0.120,
-    tip_chord=0.060,
-    span=0.110,
+    n=5,
+    root_chord=0.16,
+    tip_chord=0.01,
+    span=0.061,
     position=-1.04956,
-    cant_angle=0.5,
-    airfoil=("../data/airfoils/NACA0012-radians.txt","radians"),
+    cant_angle=0,
 )
-
+#Adding in tail
 tail = Scylla.add_tail(
-    top_radius=0.0635, bottom_radius=0.0435, length=0.060, position=-1.194656
+    top_radius=0.074/2, bottom_radius=0.041/2, length=0.1, position=-1.194656
 )
 
 main = Scylla.add_parachute(
