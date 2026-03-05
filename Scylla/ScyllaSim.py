@@ -14,16 +14,18 @@ https://docs.rocketpy.org/en/latest/index.html
 This Code can we used for any rocket and launch location if the variables are
 changed
 """
+
 #Imports of all Libraries
 from rocketpy import Environment,SolidMotor, Rocket, Flight
 from datetime import datetime, date
 current = datetime.now()
 
 #Defining Enviormental Data
-date = datetime(2025, 4, 26, 8) #year, month, day, hour(UTC)
-env=Environment(latitude=43.7615, longitude=-93.1643, date=date)
+date = datetime(2026, 3, 22, 10) #year, month, day, hour(UTC)
+env=Environment(latitude=42.3397, longitude=-96.9424, date=date)
 #^Defining Location of Launch
 #Concord Nebraska (42.3397,-96.9424)
+#North Branch Minesota (43.7615,-93.1643)
 
 
 #Set Up for Autosorting which weather prediction to use
@@ -38,7 +40,7 @@ if difDAY<11 and difDAY>2:
     #Use for Launch date 3-10 Days Out
     env.set_atmospheric_model(type="Forecast",file="GFS")
     env.info()
-elif difDAY<2 and difHOURS>30:
+elif difDAY<=2 and difHOURS>30:
     #North American Mesoscale Forecast System (NAM) Can Predict Weather 3 Days out
     #Use for Launch 3Days-51Hours Out
     env.set_atmospheric_model(type="Forecast", file="NAM")
@@ -50,8 +52,10 @@ elif difHOURS<30 and difHOURS>0:
     env.info()
     env.plots.atmospheric_model()
 
-#Defining Rocket Information
+env.set_atmospheric_model(type="Windy", file="ECMWF")
+env.plots.atmospheric_model()
 
+#Defining Rocket Information
 ##Defining Motor 
 #https://docs.rocketpy.org/en/latest/reference/classes/motors/SolidMotor.html#rocketpy.SolidMotor
 #Information on Rocket Motors Located in Docuemnt
@@ -73,29 +77,30 @@ AT_I284W= SolidMotor(
     nozzle_radius=0.007,
     throat_radius=0.003,
     interpolation_method="linear",
-    nozzle_position=0,
+    nozzle_position=-.021,
     coordinate_system_orientation="nozzle_to_combustion_chamber",
 )
 #Display Motor Info
 #AT_I284W.all_info()
+AT_I284W.draw()
 
 #Defining the Rocket
 #NOTE: x=0 is the CG without the motor
 Scylla = Rocket(
     radius=0.035, #m
     mass=1.82, #kg
-    inertia=(6.321, 6.321, 0.034),
+    inertia=(0.31277351, 0.31277276, 0.00198087),
     #Both of these cvs files can be obtained for RASAERO 2 or CFD
     #FILES MUST BE IN THE SAME FOLDER AS THE CODE
     power_off_drag="../Data/Scylla_LEP_CD.csv",
     power_on_drag="../Data/Scylla_LEP_CD.csv",
-    center_of_mass_without_motor=0,
+    center_of_mass_without_motor=-0.78,
     coordinate_system_orientation="tail_to_nose",
 )
 #Adding the Motor
-Scylla.add_motor(AT_I284W, position=-1.255)
+Scylla.add_motor(AT_I284W, position=-1.4)
 #Adding the Nose Cone
-nose_cone = Scylla.add_nose(length=0.2, kind="von karman", position=1.278)
+nose_cone = Scylla.add_nose(length=0.2, kind="von karman", position=0)
 
 #Adding the Fins (Trapezodial)
 fin_set = Scylla.add_trapezoidal_fins(
@@ -103,21 +108,24 @@ fin_set = Scylla.add_trapezoidal_fins(
     root_chord=0.16,
     tip_chord=0.01,
     span=0.061,
-    position=-1.04956,
+    position=-1.25,
     cant_angle=0,
 )
 #Adding in tail
 tail = Scylla.add_tail(
-    top_radius=0.074/2, bottom_radius=0.041/2, length=0.1, position=-1.194656
+    top_radius=0.074/2, bottom_radius=0.041/2, length=0.1, position=-1.42
 )
 
 main = Scylla.add_parachute(
     name="Main",
     cd_s=10.0,
-    trigger=800,
+    trigger=400,
     sampling_rate=105,
     lag=1.5,
     noise=(0, 8.3, 0.5),
+    radius=1.5,
+    height=1.5,
+    porosity=0.0432,
 )
 
 drogue = Scylla.add_parachute(
@@ -127,4 +135,22 @@ drogue = Scylla.add_parachute(
     sampling_rate=105,
     lag=1.5,
     noise=(0, 8.3, 0.5),
+    radius=1.5,
+    height=1.5,
+    porosity=0.0432,
 )
+rail_buttons = Scylla.set_rail_buttons(
+    upper_button_position=-0.618,
+    lower_button_position=-0.818,
+    angular_position=45,
+)
+
+test_flight = Flight(
+    rocket=Scylla, environment=env, rail_length=5.2, inclination=85, heading=0
+    )
+
+test_flight.plots.trajectory_3d()
+#test_flight.plots.all()
+Scylla.draw()
+test_flight.prints.events_registered()
+env.info()
