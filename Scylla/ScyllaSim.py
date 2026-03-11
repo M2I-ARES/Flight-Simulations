@@ -21,8 +21,8 @@ from datetime import datetime, date
 current = datetime.now()
 
 #Defining Enviormental Data
-date = datetime(2026, 3, 22, 10) #year, month, day, hour(UTC)
-env=Environment(latitude=42.3397, longitude=-96.9424, date=date)
+date = datetime(2025, 5, 3, 14) #year, month, day, hour(UTC)
+env=Environment(latitude=43.7615, longitude=-93.1643, date=date)
 #^Defining Location of Launch
 #Concord Nebraska (42.3397,-96.9424)
 #North Branch Minesota (43.7615,-93.1643)
@@ -53,7 +53,6 @@ elif difHOURS<30 and difHOURS>0:
     env.plots.atmospheric_model()
 
 env.set_atmospheric_model(type="Windy", file="ECMWF")
-env.plots.atmospheric_model()
 
 #Defining Rocket Information
 ##Defining Motor 
@@ -98,7 +97,7 @@ Scylla = Rocket(
     coordinate_system_orientation="tail_to_nose",
 )
 #Adding the Motor
-Scylla.add_motor(AT_I284W, position=-1.4)
+Scylla.add_motor(AT_I284W, position=-1.45)
 #Adding the Nose Cone
 nose_cone = Scylla.add_nose(length=0.2, kind="von karman", position=0)
 
@@ -118,25 +117,25 @@ tail = Scylla.add_tail(
 
 main = Scylla.add_parachute(
     name="Main",
-    cd_s=10.0,
-    trigger=400,
+    cd_s=2.2,
+    trigger=150,
     sampling_rate=105,
     lag=1.5,
     noise=(0, 8.3, 0.5),
-    radius=1.5,
-    height=1.5,
+    radius=.914/2,
+    height=.876,
     porosity=0.0432,
 )
 
 drogue = Scylla.add_parachute(
     name="Drogue",
-    cd_s=1.0,
+    cd_s=2.2,
     trigger="apogee",
     sampling_rate=105,
     lag=1.5,
     noise=(0, 8.3, 0.5),
-    radius=1.5,
-    height=1.5,
+    radius=.914/2,
+    height=.876,
     porosity=0.0432,
 )
 rail_buttons = Scylla.set_rail_buttons(
@@ -149,8 +148,14 @@ test_flight = Flight(
     rocket=Scylla, environment=env, rail_length=5.2, inclination=85, heading=0
     )
 
-test_flight.plots.trajectory_3d()
-#test_flight.plots.all()
+test_flight.plots.all()
 Scylla.draw()
 test_flight.prints.events_registered()
-env.info()
+
+from rocketpy.simulation import FlightDataExporter
+
+FlightDataExporter(test_flight).export_kml(
+    file_name="trajectory.kml",
+    extrude=True,
+    altitude_mode="relativetoground",
+)
