@@ -58,67 +58,76 @@ env.set_atmospheric_model(type="Windy", file="ECMWF")
 ##Defining Motor 
 #https://docs.rocketpy.org/en/latest/reference/classes/motors/SolidMotor.html#rocketpy.SolidMotor
 #Information on Rocket Motors Located in Docuemnt
-AT_I284W= SolidMotor(
-    thrust_source="../Data/AeroTech_I284W.eng", #File MUST be in same Folder
-    dry_mass=0.3, #kg
-    dry_inertia=(0.125, 0.125, 0.002),
-    center_of_dry_mass_position=0.1,
-    grains_center_of_mass_position=0.1,
-    burn_time=2.16, #s
-    #Grain Info
-    grain_number=3,
-    grain_separation=0.005,
-    grain_density=1815, #kg/m^3
-    grain_outer_radius=0.019, #m
-    grain_initial_inner_radius=0.006,
-    grain_initial_height=0.07,
-    #Nozzle Info
-    nozzle_radius=0.007,
-    throat_radius=0.003,
+AT_O3400= SolidMotor(
+    thrust_source="../Data/Cesaroni_21062O3400-P.eng", #File MUST be in Data Folder
+
+    # Dry motor properties (casing, nozzle, closures, etc.)
+    dry_mass=6.5,  # kg
+    dry_inertia=(0.055, 0.055, 0.0035),  # kg*m^2
+    center_of_dry_mass_position=0.48,  # m
+    # Propellant center of mass
+    grains_center_of_mass_position=0.48,  # m
+    burn_time=6.3,  # s
+    # Grain geometry
+    grain_number=6,
+    grain_separation=0.005,  # m
+    grain_density=1815,  # kg/m^3
+    grain_outer_radius=0.049,  # m
+    grain_initial_inner_radius=0.016,  # m
+    grain_initial_height=0.145,  # m
+    # Nozzle geometry
+    nozzle_radius=0.022,  # m
+    throat_radius=0.0105,  # m
     interpolation_method="linear",
-    nozzle_position=-.021,
+    # Positioning
+    nozzle_position=0.0,  # reference origin at nozzle
     coordinate_system_orientation="nozzle_to_combustion_chamber",
 )
+
 #Display Motor Info
-#AT_I284W.all_info()
-AT_I284W.draw()
+#AT_O3400.all_info()
+AT_O3400.draw()
 
 #Defining the Rocket
-#NOTE: x=0 is the CG without the motor
-Scylla = Rocket(
-    radius=0.035, #m
-    mass=1.82, #kg
-    inertia=(0.31277351, 0.31277276, 0.00198087),
+Hyperion = Rocket(
+    radius=0.1143, #m (9in Section)
+    mass=51.2, #kg
+    inertia=( 32.825,  32.825, .2062),
     #Both of these cvs files can be obtained for RASAERO 2 or CFD
-    #FILES MUST BE IN THE SAME FOLDER AS THE CODE
-    power_off_drag="../Data/Scylla_LEP_CD.csv",
-    power_on_drag="../Data/Scylla_LEP_CD.csv",
-    center_of_mass_without_motor=-0.78,
+    #FILES MUST BE IN THE Data Folder
+   power_off_drag="../Data/Hyperion_CD_OFF.CSV",
+   power_on_drag="../Data/Hyperion_CD_OFF.CSV",
+    center_of_mass_without_motor=-2.03, #m
     coordinate_system_orientation="tail_to_nose",
 )
 #Adding the Motor
-Scylla.add_motor(AT_I284W, position=-1.45)
-#Adding the Nose Cone
-nose_cone = Scylla.add_nose(length=0.2, kind="von karman", position=0)
+Hyperion.add_motor(AT_O3400, position=-4.63)
 
+#Adding the Nose Cone
+nose_cone = Hyperion.add_nose(length=0.909, kind="von karman", position=0)
+
+
+#Adding the Transiton
+Hyperion.add_tail(
+    top_radius=0.1143,      # 6 in / 2
+    bottom_radius=0.0762,   # 9 in / 2 
+    length=0.889,          #m
+    position=-1.823    # where the transition starts
+)
 #Adding the Fins (Trapezodial)
-fin_set = Scylla.add_trapezoidal_fins(
-    n=5,
-    root_chord=0.16,
-    tip_chord=0.01,
-    span=0.061,
-    position=-1.25,
+fin_set = Hyperion.add_trapezoidal_fins(
+    n=3,
+    root_chord=0.254,
+    tip_chord=0.051,
+    span=0.171,
+    position=-4.351, #m
     cant_angle=0,
 )
-#Adding in tail
-tail = Scylla.add_tail(
-    top_radius=0.074/2, bottom_radius=0.041/2, length=0.1, position=-1.42
-)
 
-main = Scylla.add_parachute(
+main = Hyperion.add_parachute(
     name="Main",
     cd_s=2.2,
-    trigger=150,
+    trigger=250,
     sampling_rate=105,
     lag=1.5,
     noise=(0, 8.3, 0.5),
@@ -127,7 +136,7 @@ main = Scylla.add_parachute(
     porosity=0.0432,
 )
 
-drogue = Scylla.add_parachute(
+drogue = Hyperion.add_parachute(
     name="Drogue",
     cd_s=2.2,
     trigger="apogee",
@@ -138,20 +147,23 @@ drogue = Scylla.add_parachute(
     height=.876,
     porosity=0.0432,
 )
-rail_buttons = Scylla.set_rail_buttons(
-    upper_button_position=-0.618,
-    lower_button_position=-0.818,
+
+rail_buttons = Hyperion.set_rail_buttons(
+    upper_button_position=-2.618,
+    lower_button_position=-3.618,
     angular_position=45,
 )
 
 test_flight = Flight(
-    rocket=Scylla, environment=env, rail_length=5.2, inclination=85, heading=0
+    rocket=Hyperion, environment=env, rail_length=15.2, inclination=80, heading=0
     )
 
 test_flight.plots.all()
-Scylla.draw()
+Hyperion.draw()
 test_flight.prints.events_registered()
 
+'''
+#Generates a Google Earth File to Model the Flight
 from rocketpy.simulation import FlightDataExporter
 
 FlightDataExporter(test_flight).export_kml(
@@ -159,3 +171,4 @@ FlightDataExporter(test_flight).export_kml(
     extrude=True,
     altitude_mode="relativetoground",
 )
+'''
